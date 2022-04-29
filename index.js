@@ -86,7 +86,7 @@ const addData = (transactionId) => {
 
         db.transaction.commit(getConnection(), database, transactionId).then( () => {
 
-            logger.info("Data added and Transaction Commited Succesfully.");
+            logger.info("Data added and Transaction committed successfully.");
 
             return true;
             }
@@ -103,7 +103,7 @@ beginTransaction().then( (txId) => {
     logger.info(`out: ${txId}`)
 
     addData().then((res) => {
-        logger.info(res)
+        logger.info(`Add data returned: ${res}`)
     })
 
 })
