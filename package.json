@@ -1,0 +1,23 @@
+{
+  "name": "aws-data-loader",
+  "version": "0.0.1",
+  "description": "A Data loader to load turtle files from AWS S3 Buckets to a Stardog Endpoint",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stardog-union/aws-lambda-data-loader.git"
+  },
+  "author": "Rafael A. Campo Jr",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/stardog-union/aws-lambda-data-loader/issues"
+  },
+  "homepage": "https://github.com/stardog-union/aws-lambda-data-loader#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1125.0",
+    "stardog": "^3.3.0"
+  }
+}
