@@ -61,19 +61,25 @@ const beginTransaction = () => {
 // Adds data
 const addData = (transactionId) => {
 
-    return db.add(getConnection(), database, transactionId, data, {
+    let options = {
         // @ts-ignore working around an issue in stardog.js
         encoding: undefined,
         contentType: "text/turtle"
-    }).then( (result) => {
+    }
+
+    let params = {}
+
+    // db.add(conn, database, transactionId, content, options, params)
+    return db.add(getConnection(), database, transactionId, data, options, params).then( (result) => {
 
         console.log(result) // debug
 
 
         if (!result.ok) {
             // what if this fails? :grimacing: -- result is always false because the tx failed, even if rollback is fine
-            return db.transaction.rollback(getConnection(), db, transactionId).then(() => {
+            return db.transaction.rollback(getConnection(), database, transactionId).then((rollbackResponse) => {
                 logger.debug("Data failed to be added. Rolling back the transaction");
+                logger.debug(`Rollback Response Status: ${rollbackResponse.status}`)
                 return false;
             });
         }
