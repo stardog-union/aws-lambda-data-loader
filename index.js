@@ -13,7 +13,8 @@ const connectionDetails = {
     endpoint: 'http://localhost:5820',
 }
 
-const data = "<http://stardog.com/mydata/subject> <http://stardog.com/mydata/predicate> <http://stardog.com/mydata/object> ."
+const data = `<http://stardog.com/example/subject/talladega-nights/shake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .
+                <http://stardog.com/example/subject/talladega-nights/bake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .`
 
 
 /*
@@ -84,7 +85,7 @@ const addData = (transactionId) => {
             });
         }
 
-        db.transaction.commit(getConnection(), database, transactionId).then( () => {
+        return db.transaction.commit(getConnection(), database, transactionId).then( () => {
 
             logger.info("Data added and Transaction committed successfully.");
 
@@ -102,7 +103,7 @@ const addData = (transactionId) => {
 beginTransaction().then( (txId) => {
     logger.info(`out: ${txId}`)
 
-    addData().then((res) => {
+    addData(txId).then((res) => {
         logger.info(`Add data returned: ${res}`)
     })
 
