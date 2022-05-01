@@ -100,11 +100,16 @@ const addData = (transactionId) => {
     Execution
 */
 
-beginTransaction().then( (txId) => {
-    logger.info(`out: ${txId}`)
 
-    addData(txId).then((res) => {
-        logger.info(`Add data returned: ${res}`)
+exports.handler = async (event) => {
+  const promise = new Promise( (resolve, reject) => {
+        resolve(beginTransaction().then( (txId) => {
+            logger.info(`out: ${txId}`)
+        
+            addData(txId).then((res) => {
+                logger.info(`Add data returned: ${res}`)
+            })
+        }))
     })
-
-})
+  return promise
+}
