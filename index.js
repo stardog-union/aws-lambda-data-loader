@@ -150,18 +150,18 @@ const addData = (connDetails, database, transactionId, data) => {
 exports.handler = async (event) => {
   
   // TODO this should be as lazy as possible because it doesn't make sense to get the data if we can't connect to Stardog and begin a Transaction
-  const data = await getS3Data(s3BucketParams); 
+  const data = await getS3Data(s3BucketParams);
+
+  logger.info("The data to be added to Stardog")
+  logger.info(data)
 
   const promise = new Promise( (resolve, reject) => {
         resolve(beginTransaction(connectionDetails, database).then( (txId) => {
             logger.info(`out: ${txId}`)
-
-            console.log("The data after the promise")
-
-            console.log(data)
         
             addData(connectionDetails, database, txId, data).then((res) => {
                 logger.info(`Add data returned: ${res}`)
+                logger.info(`Job Successful`)
             })
         }))
     }).catch( (error) => { // TODO implement better error handling that can pinpoint where in this process did the failure occur.
