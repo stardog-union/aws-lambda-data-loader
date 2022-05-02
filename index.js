@@ -1,17 +1,23 @@
 const { Connection, db } = require('stardog');
+require('dotenv').config();
 
 
 /*
     Configuration
 */
 
-const database = "test"
+const database = process.env.STARDOG_DATABASE
 
 const connectionDetails = {
-    username: 'admin',
-    password: 'admin',
-    endpoint: 'http://localhost:5820',
+    username: process.env.STARDOG_USERNAME,
+    password: process.env.STARDOG_PASSWORD,
+    endpoint: process.env.STARDOG_ENDPOINT,
+
+
 }
+
+console.log(connectionDetails)
+
 
 const data = `<http://stardog.com/example/subject/talladega-nights/shake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .
                 <http://stardog.com/example/subject/talladega-nights/bake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .`
@@ -38,14 +44,15 @@ const logger = {
 
 
 // Returns a connection
-const getConnection = () => {
+const getConnection = (connectionDetails) => {
+    logger.debug(JSON.stringify(connectionDetails))
     return new Connection(connectionDetails);
 }
 
 // Begins a transaction
-const beginTransaction = () => {
+const beginTransaction = (connectionDetails, database) => {
 
-    return db.transaction.begin(getConnection(), database).then( (response) => {
+    return db.transaction.begin(getConnection(connectionDetails), database).then( (response) => {
         if (!response.ok) {
             logger.debug("Failed to begin Transaction")
             return false;
@@ -60,7 +67,7 @@ const beginTransaction = () => {
 };
 
 // Adds data
-const addData = (transactionId) => {
+const addData = (connectionDetails, database, transactionId) => {
 
     let options = {
         // @ts-ignore working around an issue in stardog.js
@@ -71,21 +78,21 @@ const addData = (transactionId) => {
     let params = {}
 
     // db.add(conn, database, transactionId, content, options, params)
-    return db.add(getConnection(), database, transactionId, data, options, params).then( (result) => {
+    return db.add(connectionDetails, database, transactionId, data, options, params).then( (result) => {
 
         console.log(result) // debug
 
 
         if (!result.ok) {
             // what if this fails? :grimacing: -- result is always false because the tx failed, even if rollback is fine
-            return db.transaction.rollback(getConnection(), database, transactionId).then((rollbackResponse) => {
+            return db.transaction.rollback(connectionDetails, database, transactionId).then((rollbackResponse) => {
                 logger.debug("Data failed to be added. Rolling back the transaction");
                 logger.debug(`Rollback Response Status: ${rollbackResponse.status}`)
                 return false;
             });
         }
 
-        return db.transaction.commit(getConnection(), database, transactionId).then( () => {
+        return db.transaction.commit(connectionDetails, database, transactionId).then( () => {
 
             logger.info("Data added and Transaction committed successfully.");
 
@@ -103,10 +110,10 @@ const addData = (transactionId) => {
 
 exports.handler = async (event) => {
   const promise = new Promise( (resolve, reject) => {
-        resolve(beginTransaction().then( (txId) => {
+        resolve(beginTransaction(connectionDetails, database).then( (txId) => {
             logger.info(`out: ${txId}`)
         
-            addData(txId).then((res) => {
+            addData(getConnection(connectionDetails), database, txId).then((res) => {
                 logger.info(`Add data returned: ${res}`)
             })
         }))

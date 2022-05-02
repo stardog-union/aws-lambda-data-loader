@@ -18,6 +18,7 @@
   "homepage": "https://github.com/stardog-union/aws-lambda-data-loader#readme",
   "dependencies": {
     "aws-sdk": "^2.1125.0",
+    "dotenv": "^16.0.0",
     "stardog": "^3.3.0"
   }
 }
