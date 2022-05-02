@@ -1,18 +1,44 @@
-// Load the AWS SDK for Node.js
-var AWS = require('aws-sdk');
-// Set the region 
-AWS.config.update({region: 'us-east-1'});
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+const { s3Client } = require("./libs/s3Client.js");
 
-// Create S3 service object
-s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const testing = false;
 
-var bucketParams = {Bucket: process.argv[2]};
 
-// call S3 to retrieve the website configuration for selected bucket
-s3.getBucketWebsite(bucketParams, function(err, data) {
-  if (err) {
+/*
+  Bucket parameter Example
+*/
+
+// const bucketParams = {
+//   Bucket: "rafasrdfdata",
+//   Key: "talladega-data.ttl",
+// };
+
+
+exports.s3Handler = async (bucketParams) => {
+  try {
+    // Create a helper function to convert a ReadableStream to a string.
+    const streamToString = (stream) =>
+      new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on("data", (chunk) => chunks.push(chunk));
+        stream.on("error", reject);
+        stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+      });
+
+    // Get the object} from the Amazon S3 bucket. It is returned as a ReadableStream.
+    const data = await s3Client.send(new GetObjectCommand(bucketParams));
+
+    if (testing) {
+      return data; // For unit tests.
+    }
+
+    // Convert the ReadableStream to a string.
+    const bodyContents = await streamToString(data.Body);
+    console.log(bodyContents);
+      return bodyContents;
+  } catch (err) {
     console.log("Error", err);
-  } else if (data) {
-    console.log("Success", data);
   }
-});
+};
+
+
