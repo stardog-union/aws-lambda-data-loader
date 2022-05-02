@@ -44,19 +44,24 @@ const logger = {
 
 
 // Returns a connection
-const getConnection = (connectionDetails) => {
-    logger.debug(JSON.stringify(connectionDetails))
-    return new Connection(connectionDetails);
+const getConnection = (connDetails) => {
+    logger.debug(` creating a connection with ${JSON.stringify(connDetails)}`);
+
+    const conn = new Connection(connDetails);
+
+    console.log(conn)
+    return conn;
 }
 
 // Begins a transaction
 const beginTransaction = (connectionDetails, database) => {
 
-    return db.transaction.begin(getConnection(connectionDetails), database).then( (response) => {
-        if (!response.ok) {
-            logger.debug("Failed to begin Transaction")
-            return false;
-        }
+    const conn = getConnection(connectionDetails)
+
+    return db.transaction.begin(conn, database).then( (response) => {
+        // if (!response.ok) {
+        //     throw ("Failed to begin Transaction")
+        // }
 
         const transactionId = response.transactionId
 
@@ -78,21 +83,21 @@ const addData = (connectionDetails, database, transactionId) => {
     let params = {}
 
     // db.add(conn, database, transactionId, content, options, params)
-    return db.add(connectionDetails, database, transactionId, data, options, params).then( (result) => {
+    return db.add(getConnection(connectionDetails), database, transactionId, data, options, params).then( (result) => {
 
         console.log(result) // debug
 
 
         if (!result.ok) {
             // what if this fails? :grimacing: -- result is always false because the tx failed, even if rollback is fine
-            return db.transaction.rollback(connectionDetails, database, transactionId).then((rollbackResponse) => {
+            return db.transaction.rollback(getConnection(connectionDetails), database, transactionId).then((rollbackResponse) => {
                 logger.debug("Data failed to be added. Rolling back the transaction");
                 logger.debug(`Rollback Response Status: ${rollbackResponse.status}`)
                 return false;
             });
         }
 
-        return db.transaction.commit(connectionDetails, database, transactionId).then( () => {
+        return db.transaction.commit(getConnection(connectionDetails), database, transactionId).then( () => {
 
             logger.info("Data added and Transaction committed successfully.");
 
@@ -113,7 +118,7 @@ exports.handler = async (event) => {
         resolve(beginTransaction(connectionDetails, database).then( (txId) => {
             logger.info(`out: ${txId}`)
         
-            addData(getConnection(connectionDetails), database, txId).then((res) => {
+            addData(connectionDetails, database, txId).then((res) => {
                 logger.info(`Add data returned: ${res}`)
             })
         }))
