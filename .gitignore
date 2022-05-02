@@ -2,3 +2,4 @@ node_modules/
 .aws/credentials
 function.zip
 .env
+.DS_Store

@@ -1,0 +1,12 @@
+
+@prefix ex: <http://stardog.com/example/> .
+
+ex:shakeAndBake a ex:TalladegaNightsMovieReference .
+
+ex:invisibleFire a ex:TalladegaNightsMovieReference .
+
+ex:iWannaGoFast a ex:TalladegaNightsMovieReference .
+
+ex:spiderMonkey a ex:TalladegaNightsMovieReference .
+
+ex:wooohhooo a ex:TalladegaNightsMovieReference .
