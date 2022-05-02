@@ -18,6 +18,9 @@ require('dotenv').config();
 
 /*
     Configuration
+
+    Configurations are set in a `.env` file. 
+    See `example.env` located in the root of the project repo for an example `.env` file
 */
 
 const database = process.env.STARDOG_DATABASE
@@ -29,12 +32,14 @@ const connectionDetails = {
 }
 
 s3BucketParams = {
-    Bucket: "rafasrdfdata",
-    Key: "talladega-data.ttl",
+    Bucket: process.env.AWS_S3_BUCKET,
+    Key: process.env.AWS_S3_KEY
   };
 
-const data = `<http://stardog.com/example/subject/talladega-nights/shake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .
-                <http://stardog.com/example/subject/talladega-nights/bake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .`
+
+// For testing without S3
+// const data = `<http://stardog.com/example/subject/talladega-nights/shake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .
+//                 <http://stardog.com/example/subject/talladega-nights/bake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://stardog.com/example/object/talladega-nights-movie-reference> .`
 
 
 /*
@@ -115,7 +120,7 @@ const addData = (connDetails, database, transactionId, data) => {
 
 
         if (!result.ok) {
-            // what if this fails? :grimacing: -- result is always false because the tx failed, even if rollback is fine
+            // what if this fails? result is always false because the tx failed, even if rollback is fine
             return db.transaction.rollback(conn, database, transactionId).then((rollbackResponse) => {
 
                 logger.debug("Data failed to be added. Rolling back the transaction");
@@ -143,13 +148,14 @@ const addData = (connDetails, database, transactionId, data) => {
 
 
 exports.handler = async (event) => {
-
-    const data = await getS3Data(s3BucketParams);
+  
+  // TODO this should be as lazy as possible because it doesn't make sense to get the data if we can't connect to Stardog and begin a Transaction
+  const data = await getS3Data(s3BucketParams); 
 
   const promise = new Promise( (resolve, reject) => {
         resolve(beginTransaction(connectionDetails, database).then( (txId) => {
             logger.info(`out: ${txId}`)
-            
+
             console.log("The data after the promise")
 
             console.log(data)
