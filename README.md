@@ -21,26 +21,27 @@ An AWS Lambda function to get data from S3 and load it into [Stardog](https://ww
 
 - A running Stardog Server with a database named the same as `STARDOG_DATABASE` found in the `.env`
 
-
-
+- A local node environment
 
 ## Deploy to AWS Lambda
 
-1. Configure your AWS CLI
+1. Build the project with `npm install`
+
+2. Configure your AWS CLI
    `aws configure`
 
-2. Create a package to deploy to AWS lambda
+3. Create a package to deploy to AWS lambda
    `zip -r function.zip .`
 
-3. Update the function
+4. Update the function
    `aws lambda update-function-code --function-name s3tostardog --zip-file fileb://function.zip`
 
-4. Verify that the update was "Successful"
+5. Verify that the update was "Successful"
    `aws lambda get-function --function-name s3tostardog`
    
-5. Run the function from the AWS console. 
+6. Run the function from the AWS console. 
 
-6. Verify that the lambda function worked by querying Stardog 
+7. Verify that the lambda function worked by querying Stardog 
 
 
 # Reference
