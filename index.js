@@ -57,7 +57,7 @@ const getS3Data = async (bucketParams) => {
 
 // Logging Utility Function
 const logger = {
-    logInfo: true,
+    logInfo: false,
     info: (message) => {
         if (logger.logInfo) console.log(`INFO - ${new Date(Date.now()).toLocaleString()} - ${message}`)
     },
@@ -71,7 +71,7 @@ const getConnection = (connDetails) => {
     // TODO the calling function should pass a function here. getConnection will execute the function and 
     // the connection will be guaranteed to closed withing this scope.
 
-    logger.info(`Creating a connection with ${JSON.stringify(connDetails)}`);
+    logger.debug(`Creating a connection with ${JSON.stringify(connDetails)}`);
 
     const conn = new Connection(connDetails);
 
@@ -95,7 +95,7 @@ const beginTransaction = (connectionDetails, database) => {
 
         const transactionId = response.transactionId
 
-        logger.info(`Begin Transaction: ${transactionId}`)
+        logger.debug(`Begin Transaction: ${transactionId}`)
 
         return transactionId;
     })
@@ -103,8 +103,8 @@ const beginTransaction = (connectionDetails, database) => {
 
 
 // Adds data within a transaction
-const addData = (connDetails, database, transactionId, data) => {
-
+const addData = async (connDetails, database, transactionId, data) => {
+    console.log("In Add data function")
     let options = {
         encoding: undefined,
         contentType: "text/turtle"
@@ -112,16 +112,21 @@ const addData = (connDetails, database, transactionId, data) => {
 
     let params = {};
 
-    const conn = new Connection(connDetails);
+    const conn = getConnection(connDetails);
 
-    return db.add(conn, database, transactionId, data, options, params).then( (result) => {
+    console.log("before return In Add data function")
 
-        console.log(result); // prints the result from db.add(conn, ...)
+    return await db.add(conn, database, transactionId, data, options, params).then( (result) => {
 
+        //console.log(result); // prints the result from db.add(conn, ...)
 
+        console.log("Return db Add")
+
+        logger.debug(result)
         if (!result.ok) {
             // what if this fails? result is always false because the tx failed, even if rollback is fine
             return db.transaction.rollback(conn, database, transactionId).then((rollbackResponse) => {
+                console.log("Rollback case")
 
                 logger.debug("Data failed to be added. Rolling back the transaction");
                 logger.debug(`Rollback Response Status: ${rollbackResponse.status}`);
@@ -132,11 +137,15 @@ const addData = (connDetails, database, transactionId, data) => {
 
         return db.transaction.commit(conn, database, transactionId).then( () => {
 
-            logger.info("Data added and Transaction committed successfully.");
+            console.log("Commit case")
+
+            logger.debug("Data added and Transaction committed successfully.");
 
             return true;
             }
         )
+
+        console.log("No reach")
 
     })
 }
@@ -158,11 +167,13 @@ exports.handler = async (event) => {
   const promise = new Promise( (resolve, reject) => {
         resolve(beginTransaction(connectionDetails, database).then( (txId) => {
             logger.info(`out: ${txId}`)
-        
-            addData(connectionDetails, database, txId, data).then((res) => {
-                logger.info(`Add data returned: ${res}`)
-                logger.info(`Job Successful`)
+
+            const promise = new Promise ( (resolve, reject) => {
+                resolve(addData(connectionDetails, database, txId, data))
             })
+
+            return promise;
+        
         }))
     }).catch( (error) => { // TODO implement better error handling that can pinpoint where in this process did the failure occur.
         console.error(error);

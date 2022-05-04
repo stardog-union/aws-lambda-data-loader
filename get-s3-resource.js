@@ -16,9 +16,12 @@ const testing = false;
 
 exports.s3Handler = async (bucketParams) => {
   try {
+
+    console.log("Getting from S3");
     // Create a helper function to convert a ReadableStream to a string.
     const streamToString = (stream) =>
       new Promise((resolve, reject) => {
+        console.log("Stream to String");
         const chunks = [];
         stream.on("data", (chunk) => chunks.push(chunk));
         stream.on("error", reject);
@@ -31,10 +34,10 @@ exports.s3Handler = async (bucketParams) => {
     if (testing) {
       return data; // For unit tests.
     }
-
+    console.log("Getting Body Contents");
     // Convert the ReadableStream to a string.
     const bodyContents = await streamToString(data.Body);
-    console.log(bodyContents);
+    // console.log(bodyContents);
       return bodyContents;
   } catch (err) {
     console.log("Error", err);
